@@ -3,36 +3,34 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TTM: Real-Time Co-Speech Motion Generation</title>
-  <meta name="description" content="TTM: The first end-to-end multimodal language model for joint speech and full-body motion generation."/>
+  <title>TTM: An End-to-End human–AI Interaction Model for Real-Time Co-Speech Motion Generation</title>
+  <meta name="description" content="TTM: The first end-to-end multimodal language model for joint speech and full-body motion generation from live audio with sub-second latency."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
-    :root {
-      --bg:#f7f5f0; --bg2:#eeeae2; --sf:#fff; --bd:#ddd9d0;
-      --ac:#1a1a2e; --red:#c84b31; --grn:#2d6a4f;
-      --tx:#1a1a1e; --mu:#666660; --dm:#999990; --ink:#2c2c3a;
+    :root{
+      --bg:#f7f5f0;--bg2:#eeeae2;--sf:#fff;--bd:#ddd9d0;
+      --ac:#1a1a2e;--red:#c84b31;--grn:#2d6a4f;
+      --tx:#1a1a1e;--mu:#666660;--dm:#999990;--ink:#2c2c3a;
     }
     *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
     html{scroll-behavior:smooth}
     body{background:var(--bg);color:var(--tx);font-family:'Inter',sans-serif;font-weight:300;line-height:1.7;overflow-x:hidden}
 
-    /* NAV */
     nav{position:fixed;top:0;left:0;right:0;z-index:100;height:52px;display:flex;align-items:center;justify-content:space-between;padding:0 40px;background:rgba(247,245,240,.93);backdrop-filter:blur(12px);border-bottom:1px solid var(--bd)}
-    .nl{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;color:var(--ac);letter-spacing:.1em}
+    .nlogo{font-family:'JetBrains Mono',monospace;font-size:.82rem;font-weight:500;color:var(--ac);letter-spacing:.1em}
     nav ul{display:flex;gap:28px;list-style:none}
     nav ul a{font-size:.82rem;color:var(--mu);text-decoration:none;transition:color .2s}
     nav ul a:hover{color:var(--ac)}
     @media(max-width:640px){nav ul{display:none}}
 
-    /* HERO */
     .hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:100px 32px 64px;text-align:center;position:relative;background:radial-gradient(ellipse 70% 50% at 50% 0%,rgba(200,75,49,.06),transparent 70%),var(--bg)}
     .hero::before{content:'';position:absolute;inset:0;pointer-events:none;background-image:linear-gradient(var(--bd) 1px,transparent 1px),linear-gradient(90deg,var(--bd) 1px,transparent 1px);background-size:80px 80px;opacity:.22}
     .hero>*{position:relative;z-index:1}
 
     .badge{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--bd);border-radius:4px;padding:5px 16px;font-size:.78rem;font-weight:500;color:var(--mu);letter-spacing:.08em;text-transform:uppercase;margin-bottom:28px;background:var(--sf)}
-    .dot{width:6px;height:6px;background:var(--red);border-radius:50%}
+    .bdot{width:6px;height:6px;background:var(--red);border-radius:50%}
 
     h1{font-family:'Playfair Display',serif;font-size:clamp(1.9rem,4.2vw,3.2rem);line-height:1.15;letter-spacing:-.02em;max-width:860px;color:var(--ink);margin-bottom:12px}
     h1 em{font-style:italic;color:var(--red)}
@@ -46,18 +44,17 @@
 
     .btns{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-bottom:16px}
     .btn{display:inline-flex;align-items:center;gap:7px;padding:9px 20px;border-radius:4px;font-size:.84rem;font-weight:500;text-decoration:none;transition:all .18s;cursor:pointer;border:1px solid transparent;font-family:inherit}
-    .bd{background:var(--ac);color:#fff}.bd:hover{background:#2d2d4a}
-    .bg{background:var(--sf);color:var(--ink);border-color:var(--bd)}.bg:hover{border-color:var(--ac);color:var(--ac)}
-    .br{background:var(--red);color:#fff}.br:hover{background:#b03e28}
+    .bdk{background:var(--ac);color:#fff}.bdk:hover{background:#2d2d4a}
+    .bgh{background:var(--sf);color:var(--ink);border-color:var(--bd)}.bgh:hover{border-color:var(--ac);color:var(--ac)}
+    .brd{background:var(--red);color:#fff}.brd:hover{background:#b03e28}
 
     .stats{display:flex;margin-top:52px;border:1px solid var(--bd);border-radius:8px;overflow:hidden;background:var(--sf)}
-    .st{flex:1;padding:18px 24px;text-align:center;border-right:1px solid var(--bd)}
-    .st:last-child{border-right:none}
+    .si{flex:1;padding:18px 24px;text-align:center;border-right:1px solid var(--bd)}
+    .si:last-child{border-right:none}
     .sn{font-family:'Playfair Display',serif;font-size:1.9rem;color:var(--red);line-height:1}
     .sl{font-size:.72rem;color:var(--mu);text-transform:uppercase;letter-spacing:.07em;margin-top:4px}
-    @media(max-width:600px){.stats{flex-direction:column}.st{border-right:none;border-bottom:1px solid var(--bd)}.st:last-child{border-bottom:none}}
+    @media(max-width:600px){.stats{flex-direction:column}.si{border-right:none;border-bottom:1px solid var(--bd)}.si:last-child{border-bottom:none}}
 
-    /* LAYOUT */
     .w{max-width:1080px;margin:0 auto;padding:80px 32px}
     .ww{max-width:1200px;margin:0 auto;padding:80px 32px}
     hr.dv{border:none;height:1px;background:var(--bd)}
@@ -66,7 +63,7 @@
     .bt{font-size:.96rem;line-height:1.88;color:#3a3a46;max-width:780px}
     .bt strong{color:var(--ink);font-weight:600}
 
-    /* PROBLEM GRID */
+    /* problem grid */
     .pg{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--bd);border:1px solid var(--bd);border-radius:8px;overflow:hidden;margin-top:36px}
     @media(max-width:768px){.pg{grid-template-columns:1fr}}
     .pc{background:var(--sf);padding:28px}
@@ -74,26 +71,34 @@
     .pc h3{font-family:'Playfair Display',serif;font-size:1rem;color:var(--ink);margin-bottom:10px;line-height:1.35}
     .pc p{font-size:.84rem;color:var(--mu);line-height:1.65}
 
-    /* FIGURES — pure <img> */
-    .fig{margin:32px 0}
+    /* figures */
+    .fig{margin:40px 0}
     .fig img{width:100%;border-radius:8px;border:1px solid var(--bd);display:block}
-    .fc{margin-top:12px;font-size:.82rem;color:var(--mu);line-height:1.6}
-    .fc strong{color:var(--ink)}
+    .fcap{margin-top:12px;font-size:.82rem;color:var(--mu);line-height:1.65}
+    .fcap strong{color:var(--ink)}
+    .fcap em{font-style:italic}
+    .fnum{display:inline-block;font-family:'JetBrains Mono',monospace;font-size:.68rem;background:var(--ac);color:#fff;padding:2px 8px;border-radius:3px;margin-bottom:10px;letter-spacing:.05em}
+    /* caption color helpers */
+    .cgreen{color:#228B22;font-weight:500}
+    .cpurple{color:#7B00FF;font-weight:500}
+    .corange{color:#E07000;font-weight:500}
+    .cred{color:#CC2200;font-weight:500}
+    .cwhite-bg{background:#555;color:#fff;padding:1px 4px;border-radius:2px;font-size:.9em}
 
-    /* VIDEO */
+    /* video */
     .vw{border-radius:8px;overflow:hidden;border:1px solid var(--bd);background:#111}
     .vw video{width:100%;display:block}
 
-    /* ARCH */
+    /* arch cards */
     .ag{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:32px}
     @media(max-width:768px){.ag{grid-template-columns:1fr}}
-    .ac2{border:1px solid var(--bd);border-radius:8px;padding:26px;background:var(--sf);transition:border-color .2s,box-shadow .2s}
-    .ac2:hover{border-color:#bbb;box-shadow:0 4px 20px rgba(0,0,0,.06)}
+    .ac{border:1px solid var(--bd);border-radius:8px;padding:26px;background:var(--sf);transition:border-color .2s,box-shadow .2s}
+    .ac:hover{border-color:#bbb;box-shadow:0 4px 20px rgba(0,0,0,.06)}
     .an{font-family:'Playfair Display',serif;font-size:2rem;color:var(--bd);line-height:1;margin-bottom:10px}
-    .ac2 h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px}
-    .ac2 p{font-size:.83rem;color:var(--mu);line-height:1.65}
+    .ac h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px}
+    .ac p{font-size:.83rem;color:var(--mu);line-height:1.65}
 
-    /* CONTRIB */
+    /* contrib */
     .cl{display:flex;flex-direction:column;gap:12px;margin-top:32px}
     .cr{display:flex;gap:20px;align-items:flex-start;padding:22px 24px;border:1px solid var(--bd);border-radius:8px;background:var(--sf);transition:border-color .2s}
     .cr:hover{border-color:#bbb}
@@ -102,7 +107,7 @@
     .cr p{font-size:.84rem;color:var(--mu);line-height:1.6}
     .mt{display:inline;font-family:'JetBrains Mono',monospace;font-size:.78em;background:var(--bg2);border:1px solid var(--bd);border-radius:3px;padding:1px 5px;color:var(--ac)}
 
-    /* TABLE */
+    /* tables */
     .tw{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;margin-top:28px}
     table{width:100%;border-collapse:collapse;font-size:.83rem;background:var(--sf)}
     .thm th{padding:10px 12px 6px;text-align:center;font-weight:600;font-size:.76rem;letter-spacing:.04em;color:var(--ink);border-bottom:1px solid var(--bd);background:var(--bg2)}
@@ -120,12 +125,13 @@
     .me{color:#444;font-weight:500}
     .ds{color:var(--dm)}
 
-    /* SMALL TABLE for ablations */
-    .tw2{overflow-x:auto;border:1px solid var(--bd);border-radius:8px;margin-top:20px}
-    .st2 h3{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin:32px 0 4px}
-    .st2 p{font-size:.84rem;color:var(--mu);margin-bottom:0}
+    /* ablation two-col */
+    .ablg{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px;align-items:start}
+    @media(max-width:820px){.ablg{grid-template-columns:1fr}}
+    .ablt{font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:6px}
+    .abld{font-size:.84rem;color:var(--mu);margin-bottom:12px}
 
-    /* CITE */
+    /* cite */
     .cb{position:relative;background:var(--sf);border:1px solid var(--bd);border-radius:8px;padding:28px 32px;margin-top:24px}
     .cb pre{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:#555;line-height:1.75;white-space:pre-wrap}
     .cpb{position:absolute;top:12px;right:12px;background:var(--bg2);border:1px solid var(--bd);border-radius:4px;padding:5px 12px;font-size:.74rem;font-family:inherit;color:var(--mu);cursor:pointer;transition:all .18s}
@@ -137,20 +143,16 @@
 
     .rv{opacity:0;transform:translateY(20px);transition:opacity .55s ease,transform .55s ease}
     .rv.in{opacity:1;transform:none}
-
-    /* two-col for ablation tables side by side */
-    .tc{display:grid;grid-template-columns:1fr 1fr;gap:32px;margin-top:32px;align-items:start}
-    @media(max-width:820px){.tc{grid-template-columns:1fr}}
   </style>
 </head>
 <body>
 
 <nav>
-  <span class="nl">TTM · 2026</span>
+  <span class="nlogo">TTM · 2026</span>
   <ul>
     <li><a href="#abstract">Abstract</a></li>
-    <li><a href="#demo">Demo</a></li>
     <li><a href="#method">Method</a></li>
+    <li><a href="#demo">Demo</a></li>
     <li><a href="#results">Results</a></li>
     <li><a href="#citation">Citation</a></li>
   </ul>
@@ -158,7 +160,7 @@
 
 <!-- ══ HERO ══ -->
 <div class="hero">
-  <div class="badge"><span class="dot"></span>ACM MM 2026 · Rio de Janeiro, Brazil</div>
+  <div class="badge"><span class="bdot"></span>ACM MM 2026 · Rio de Janeiro, Brazil</div>
   <h1>TTM: An End-to-End human–AI Interaction Model for<br/><em>Real-Time Co-Speech Motion Generation</em></h1>
   <p class="hdesc">The first unified streaming model that jointly generates speech and full-body motion from live audio with sub-second latency — no cascaded pipelines, no sentence-level buffering.</p>
 
@@ -184,17 +186,17 @@
   </div>
 
   <div class="btns">
-    <a href="#" class="btn bd">📄 Paper (PDF)</a>
-    <a href="https://github.com/jackchen69/ttm-project-page" class="btn bg" target="_blank">💻 GitHub</a>
-    <a href="#demo" class="btn br">🎬 Video Demo</a>
-    <a href="#citation" class="btn bg">📎 Cite</a>
+    <a href="#" class="btn bdk">📄 Paper (PDF)</a>
+    <a href="https://github.com/jackchen69/ttm-project-page" class="btn bgh" target="_blank">💻 GitHub</a>
+    <a href="#demo" class="btn brd">🎬 Video Demo</a>
+    <a href="#citation" class="btn bgh">📎 Cite</a>
   </div>
 
   <div class="stats">
-    <div class="st"><div class="sn">450ms</div><div class="sl">Latency</div></div>
-    <div class="st"><div class="sn">∼8×</div><div class="sl">BucketMoE Speedup</div></div>
-    <div class="st"><div class="sn">∼7%</div><div class="sl">TopK Gain</div></div>
-    <div class="st"><div class="sn">4B</div><div class="sl">Mover Params</div></div>
+    <div class="si"><div class="sn">450ms</div><div class="sl">End-to-End Latency</div></div>
+    <div class="si"><div class="sn">∼8×</div><div class="sl">BucketMoE Speedup</div></div>
+    <div class="si"><div class="sn">∼7%</div><div class="sl">TopK Gain</div></div>
+    <div class="si"><div class="sn">4B</div><div class="sl">Mover Parameters</div></div>
   </div>
 </div>
 
@@ -205,9 +207,11 @@
   <div class="rv">
     <div class="lb">Abstract</div>
     <h2>Joint Speech &amp; Full-Body Motion from Live Audio</h2>
-    <p class="bt">Human communication seamlessly integrates speech with non-verbal cues such as gestures and body posture. Existing voice-motion systems rely on fragmented pipelines that introduce cascaded errors and sentence-level latency. We present <strong>TTM</strong>, <strong>the first end-to-end multimodal language model for joint speech and full-body motion generation</strong> from live audio with sub-second latency. Its <strong>Thinker-Talker-Mover</strong> architecture drives speech synthesis and motion generation from a shared audio encoding, eliminating cross-stage errors. We propose <strong>BucketMoE</strong> achieving ∼8× MoE speedup, and <strong>TopK</strong>, a VQ-VAE codebook augmentation yielding ∼7% performance gain.</p>
+    <p class="bt">
+      Human communication seamlessly integrates speech with non-verbal cues such as gestures and body posture to convey meaning and intent. Existing voice-motion systems rely on fragmented pipelines that introduce cascaded errors and sentence-level latency. We present <strong>TTM</strong>, <strong>the first end-to-end multimodal language model for joint speech and full-body motion generation</strong> from live audio with sub-second latency. Its <strong>Thinker-Talker-Mover</strong> architecture simultaneously drives speech synthesis and motion generation from a shared audio encoding, eliminating cross-stage errors. We propose <strong>BucketMoE</strong>, a plug-and-play token-length-aware bucketing strategy achieving ∼8× speedup in both training and inference, and <strong>TopK</strong>, a VQ-VAE codebook-based motion augmentation method yielding ∼7% performance improvement. Experiments demonstrate state-of-the-art co-speech motion quality with real-time responsiveness.
+    </p>
     <div class="pg">
-      <div class="pc"><div class="pt">Problem I</div><h3>No Unified Speech-Motion Model</h3><p>Cascaded pipelines accumulate errors silently. No gradient can jointly optimize audio encoding and motion generation across independent modules.</p></div>
+      <div class="pc"><div class="pt">Problem I</div><h3>No Unified Speech-Motion Model</h3><p>Cascaded pipelines accumulate errors silently. Without a shared representation, no gradient can jointly optimize audio encoding and motion generation.</p></div>
       <div class="pc"><div class="pt">Problem II</div><h3>Sentence-Level Latency</h3><p>Systems buffer entire utterances before any output, incurring 1.5–3 s latency. Natural turn-taking demands sub-second response times.</p></div>
       <div class="pc"><div class="pt">Problem III</div><h3>Limited Speech-Motion Data</h3><p>BEAT (~60h) and HumanML3D (~28h) are small. Random temporal cropping produces semantically incomplete training fragments.</p></div>
     </div>
@@ -215,36 +219,14 @@
 
   <!-- Figure 1 -->
   <div class="rv" style="margin-top:48px">
+    <div class="fnum">Figure 1</div>
     <div class="fig">
-      <img src="figures/figure1.png" alt="TTM vs Cascaded Pipelines"
-           onerror="this.src='figures/figure1.jpg'"/>
-      <p class="fc"><strong>Figure 1: TTM vs. Cascaded Multi-stage Pipelines.</strong> <em>Left:</em> Conventional pipelines accumulate errors and incur 1.5–3 s latency. <em>Right:</em> TTM unifies everything into a single Thinker-Talker-Mover architecture, streaming synchronized speech and full-body motion at 450 ms with no cross-stage errors.</p>
-    </div>
-  </div>
-</div>
-
-<hr class="dv">
-
-<!-- ══ DEMO ══ -->
-<div class="w" id="demo">
-  <div class="rv">
-    <div class="lb">Demo</div>
-    <h2>Real-Time Bilingual Co-Speech Motion</h2>
-    <p style="color:var(--mu);margin-bottom:24px;font-size:.92rem">TTM streams synchronized speech and full-body motion from live audio, supporting Mandarin and English without any additional adaptation.</p>
-    <div class="vw">
-      <video controls>
-        <source src="figures/demo.mp4" type="video/mp4">
-        Your browser does not support HTML5 video.
-      </video>
-    </div>
-  </div>
-
-  <!-- Figure 5 -->
-  <div class="rv" style="margin-top:36px">
-    <div class="fig">
-      <img src="figures/figure5.png" alt="Real-time bilingual demo"
-           onerror="this.src='figures/figure5.jpg'"/>
-      <p class="fc"><strong>Figure 5: Real-time bilingual interaction and physical motion simulation.</strong> Three scenarios: Mandarin text-driven (left), English speech-driven (middle), English audio command (right). Each panel shows generated speech waveforms, text transcripts, and full-body motion in MuJoCo. White dot line traces the left wrist's position.</p>
+      <img src="figures/figure1.png" alt="TTM vs Cascaded Pipelines" onerror="this.src='figures/figure1.jpg'"/>
+      <p class="fcap">
+        <strong>TTM vs. Cascaded Multi-stage Pipelines.</strong>
+        <em>Left:</em> Conventional pipelines sequentially chain speech recognition, LLM, speech synthesis, and motion generation, accumulating errors across stages and incurring 1.5–3 s latency.
+        <em>Right:</em> <strong>TTM</strong> unifies these into a single <strong>Thinker-Talker-Mover</strong> architecture that streams synchronized speech and full-body motion from live audio in real time, achieving 450 ms latency with no cross-stage error propagation.
+      </p>
     </div>
   </div>
 </div>
@@ -256,22 +238,31 @@
   <div class="rv">
     <div class="lb">Method</div>
     <h2>Thinker · Talker · Mover</h2>
-    <p style="color:var(--mu);font-size:.92rem;max-width:700px">TTM extends Qwen3-Omni with a three-component architecture that unifies perception, language reasoning, speech synthesis, and motion generation in a single trainable system.</p>
+    <p style="color:var(--mu);font-size:.92rem;max-width:700px">
+      TTM extends Qwen3-Omni with a three-component architecture that unifies perception, language reasoning, speech synthesis, and motion generation within a single trainable end-to-end system.
+    </p>
 
     <!-- Figure 2 -->
-    <div class="fig" style="margin-top:32px">
-      <img src="figures/figure2.png" alt="TTM Architecture"
-           onerror="this.src='figures/figure2.jpg'"/>
-      <p class="fc"><strong>Figure 2: Overview of the TTM architecture.</strong> (a) The Thinker's final-layer representation drives the frozen Talker for streaming speech; an intermediate representation routes to the Mover via trainable Mover Connector, with gradients back-propagating into the Thinker. (b) Top-k codebook augmentation. (c) Three-stage training curriculum.</p>
+    <div class="rv" style="margin-top:16px">
+      <div class="fnum">Figure 2</div>
+      <div class="fig">
+        <img src="figures/figure2.png" alt="TTM Architecture Overview" onerror="this.src='figures/figure2.jpg'"/>
+        <p class="fcap">
+          <strong>Overview of the TTM architecture.</strong>
+          (a) <strong>Thinker–Talker–Mover:</strong> The <strong>Thinker</strong> ingests text, VAE-encoded motion, and live audio. Its final-layer representation drives the frozen <strong>Talker</strong> for streaming speech, while an intermediate representation is routed to the <strong>Mover</strong> via a trainable Mover Connector for full-body motion generation, with gradients back-propagating into the Thinker.
+          (b) <strong>Motion Augmentation:</strong> Top-<em>k</em> nearest codebook entries are retrieved per frame; one is sampled to inject a motion synonym without disrupting audio–motion alignment.
+          (c) <strong>Training Stages:</strong> Stage 1 trains the Mover on text–motion pairs; Stage 2 trains the Mover Connector on audio–motion pairs; Stage 3 jointly fine-tunes the Thinker, Mover, and Mover Connector via LoRA with the Talker frozen.
+        </p>
+      </div>
     </div>
   </div>
 
   <!-- Three components -->
   <div class="rv" style="margin-top:48px">
     <div class="ag">
-      <div class="ac2"><div class="an">01</div><h3>Thinker</h3><p>Encodes live audio into a hierarchy of hidden representations. Its <em>final</em> state conditions the Talker; an <em>intermediate</em> state (layer 24) routes to the Mover — enabling motion gradients to shape audio encoding during training.</p></div>
-      <div class="ac2"><div class="an">02</div><h3>Talker (frozen)</h3><p>Drives streaming speech synthesis via RVQ with 8 codebooks decoded by Code2Wav. Remains frozen to preserve pretrained quality. Its intermediate representations provide <em>cross-modal distillation</em> to the Mover at training time.</p></div>
-      <div class="ac2"><div class="an">03</div><h3>Mover</h3><p>Generates full-body motion tokens autoregressively, conditioning on both Thinker and Talker states via a lightweight Mover Connector. Uses corrected HumanML3D SMPL parameters for direct robot retargeting.</p></div>
+      <div class="ac"><div class="an">01</div><h3>Thinker</h3><p>Encodes live audio into a hierarchy of hidden representations. Its <em>final</em> state conditions the Talker; an <em>intermediate</em> state (layer 24) routes to the Mover — enabling motion gradients to back-propagate into audio encoding during training.</p></div>
+      <div class="ac"><div class="an">02</div><h3>Talker (frozen)</h3><p>Drives streaming speech synthesis via RVQ with 8 codebooks decoded by Code2Wav. Remains frozen to preserve pretrained speech quality. Its intermediate representations provide <em>cross-modal distillation</em> to the Mover at training time.</p></div>
+      <div class="ac"><div class="an">03</div><h3>Mover</h3><p>Generates full-body motion tokens autoregressively, conditioning on both Thinker and Talker hidden states via a lightweight Mover Connector. Uses corrected HumanML3D SMPL parameters for direct robot retargeting.</p></div>
     </div>
   </div>
 
@@ -279,18 +270,52 @@
   <div class="rv" style="margin-top:48px">
     <div class="lb">Key Innovations</div>
     <div class="cl">
-      <div class="cr"><span class="ct">TTM</span><div><h3>Cross-Modal Intermediate Coupling</h3><p>An intermediate Thinker representation is routed simultaneously to both Talker and Mover. During training, motion gradients back-propagate into the audio encoder — a joint optimization signal structurally impossible in any cascaded pipeline.</p></div></div>
-      <div class="cr"><span class="ct">BucketMoE</span><div><h3>∼8× MoE Acceleration — Pure Runtime Patch</h3><p>Tokens are grouped into <span class="mt">K</span> length-aware buckets after expert dispatch and processed as a single batched matrix operation. Reduces iterations from N=128 to K=8 (training) or K=1 (decode). Zero architectural changes, zero extra memory.</p></div></div>
-      <div class="cr"><span class="ct">TopK</span><div><h3>VQ-VAE Codebook Motion Augmentation</h3><p>Samples uniformly from the <span class="mt">k=5</span> nearest codebook neighbours. These <em>motion synonyms</em> preserve audio-motion temporal alignment by construction while exposing the Mover to a richer distribution, yielding ∼7% average gain.</p></div></div>
+      <div class="cr"><span class="ct">TTM</span><div><h3>Cross-Modal Intermediate Coupling</h3><p>An intermediate Thinker representation is routed simultaneously to both Talker and Mover. During training, motion gradients back-propagate through this shared representation into the audio encoder — a joint optimization signal structurally impossible in any cascaded pipeline.</p></div></div>
+      <div class="cr"><span class="ct">BucketMoE</span><div><h3>∼8× MoE Acceleration — Pure Runtime Patch</h3><p>Tokens are grouped into <span class="mt">K</span> length-aware buckets after expert dispatch and processed as a single batched matrix operation. Reduces iterations from N=128 to K=8 (training) or K=1 (decode). Zero architectural changes, zero extra memory — applicable via a single function call.</p></div></div>
+      <div class="cr"><span class="ct">TopK</span><div><h3>VQ-VAE Codebook Motion Augmentation</h3><p>Samples uniformly from the <span class="mt">k=5</span> nearest codebook neighbours. These <em>motion synonyms</em> preserve audio-motion temporal alignment by construction while exposing the Mover to a richer training distribution, yielding ∼7% average performance gain.</p></div></div>
     </div>
   </div>
 
   <!-- Figure 3 -->
   <div class="rv" style="margin-top:48px">
+    <div class="fnum">Figure 3</div>
     <div class="fig">
-      <img src="figures/figure3.png" alt="TopK Motion Augmentation"
-           onerror="this.src='figures/figure3.jpg'"/>
-      <p class="fc"><strong>Figure 3: TopK Motion Augmentation.</strong> For each motion frame, the VQ-VAE encoder retrieves the k=5 nearest codebook entries by Euclidean distance. One is sampled uniformly at random, introducing a <em>motion synonym</em> (purple). Temporal alignment is preserved since only the codebook index is substituted.</p>
+      <img src="figures/figure3.png" alt="TopK Motion Augmentation" onerror="this.src='figures/figure3.jpg'"/>
+      <p class="fcap">
+        <strong>TopK Motion Augmentation.</strong>
+        For each motion frame, the VQ-VAE encoder retrieves the <em>k</em>=5 nearest codebook entries by Euclidean distance. One candidate is sampled uniformly at random rather than always selecting the nearest, introducing a <em>motion synonym</em> (purple) into the token sequence. This codebook-level substitution preserves audio-motion alignment while exposing the model to a richer distribution of motion codes during training.
+      </p>
+    </div>
+  </div>
+</div>
+
+<hr class="dv">
+
+<!-- ══ DEMO ══ -->
+<div class="w" id="demo">
+  <div class="rv">
+    <div class="lb">Demo</div>
+    <h2>Real-Time Bilingual Co-Speech Motion</h2>
+    <p style="color:var(--mu);margin-bottom:24px;font-size:.92rem">
+      TTM streams synchronized speech and full-body motion from live audio in real time, supporting Mandarin and English without any additional adaptation.
+    </p>
+    <div class="vw">
+      <video controls>
+        <source src="figures/demo.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+    </div>
+  </div>
+
+  <!-- Figure 5 -->
+  <div class="rv" style="margin-top:40px">
+    <div class="fnum">Figure 5</div>
+    <div class="fig">
+      <img src="figures/figure5.png" alt="Real-time bilingual interaction demo" onerror="this.src='figures/figure5.jpg'"/>
+      <p class="fcap">
+        <strong>Real-time bilingual interaction and physical motion simulation of TTM.</strong>
+        The figure showcases three interactive scenarios: Mandarin text-driven interaction (left), English speech-driven conversation (middle), and English audio command execution (right). For each interaction turn, we present the system's synchronized response, comprising generated speech waveforms, corresponding text transcripts, and the physically-grounded full-body motion performed by a humanoid agent within the MuJoCo simulation environment with the <span class="cwhite-bg">white</span> dot line tracing the left wrist's position.
+      </p>
     </div>
   </div>
 </div>
@@ -302,7 +327,9 @@
   <div class="rv">
     <div class="lb">Results</div>
     <h2>State-of-the-Art on Text-to-Motion &amp; Speech-to-Motion</h2>
-    <p style="color:var(--mu);font-size:.9rem;max-width:700px;margin-bottom:8px">TTM<sub>Mover4B_text</sub> ★ achieves best Diversity, R-Precision Top-1/2/3, Matching Score and BC. Metrics averaged over 60 runs with 95% confidence intervals.</p>
+    <p style="color:var(--mu);font-size:.9rem;max-width:740px;margin-bottom:8px">
+      TTM<sub>Mover4B_text</sub> ★ achieves the best Diversity, R-Precision Top-1/2/3, Matching Score and BC, approaching ground-truth level on multiple metrics. Metrics averaged over 60 runs with 95% confidence intervals.
+    </p>
 
     <div class="tw">
       <table>
@@ -333,28 +360,31 @@
     </div>
   </div>
 
-  <!-- Figure 4 qualitative -->
+  <!-- Figure 4 -->
   <div class="rv" style="margin-top:56px">
     <div class="lb">Qualitative Comparison</div>
     <h2>Co-Speech Motion Quality</h2>
+    <div class="fnum">Figure 4</div>
     <div class="fig">
-      <img src="figures/figure4.png" alt="Qualitative comparison"
-           onerror="this.src='figures/figure4.jpg'"/>
-      <p class="fc"><strong>Figure 4: Qualitative comparison.</strong> Given the same speech input, TTM aligns most closely with the ground truth in timing and amplitude. EMAGE and SemTalk overlook large-scale movements (orange boxes) and introduce extraneous motions (red boxes). Forest green line = audio onset strength; purple curve = left wrist position.</p>
+      <img src="figures/figure4.png" alt="Qualitative comparison" onerror="this.src='figures/figure4.jpg'"/>
+      <p class="fcap">
+        <strong>Qualitative comparison of co-speech full-body motion generation.</strong>
+        Given the same speech input, we compare full-body motion generations from EMAGE, SemTalk, and our <strong>TTM</strong>. The top panel displays the audio waveform with the <span class="cgreen">forest green</span> line indicating the audio onset strength. The horizontal axis represents time, with the <span class="cpurple">purple</span> line tracing the left wrist's position. TTM aligns most closely with the ground truth in both timing and amplitude. In contrast, EMAGE and SemTalk overlook several large-scale movements, as indicated by the <span class="corange">orange</span> boxes, while also introducing extraneous motions, highlighted by the <span class="cred">red</span> boxes.
+      </p>
     </div>
   </div>
 
-  <!-- Ablation tables -->
+  <!-- Ablation Studies -->
   <div class="rv" style="margin-top:56px">
     <div class="lb">Ablation Studies</div>
     <h2>Component Analysis</h2>
 
-    <div class="tc">
+    <div class="ablg">
       <!-- Mover backbone -->
       <div>
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px">Mover Backbone Selection</h3>
-        <p style="font-size:.84rem;color:var(--mu);margin-bottom:12px">Qwen3-4B dense achieves the best performance; sparse routing alone does not compensate for reduced active parameters.</p>
-        <div class="tw2">
+        <p class="ablt">Mover Backbone Selection</p>
+        <p class="abld">Qwen3-4B dense achieves the best performance; sparse routing alone does not compensate for reduced active parameters.</p>
+        <div class="tw">
           <table>
             <thead>
               <tr class="thm"><th style="text-align:left">Mover Backbone</th><th>FID ↓</th><th>Diversity ↑</th><th>Top-1↑</th><th>Top-3↑</th><th>BC ↑</th></tr>
@@ -370,9 +400,9 @@
 
       <!-- TopK sensitivity -->
       <div>
-        <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px">TopK Sensitivity (k sweep)</h3>
-        <p style="font-size:.84rem;color:var(--mu);margin-bottom:12px">k=5 strikes the optimal balance between motion synonym diversity and semantic fidelity.</p>
-        <div class="tw2">
+        <p class="ablt">TopK Sensitivity (k sweep)</p>
+        <p class="abld">k=5 strikes the optimal balance between motion synonym diversity and semantic fidelity.</p>
+        <div class="tw">
           <table>
             <thead>
               <tr class="thm"><th>k</th><th>FID ↓</th><th>Diversity ↑</th><th>Top-1↑</th><th>Top-3↑</th><th>BC ↑</th></tr>
@@ -392,11 +422,11 @@
       </div>
     </div>
 
-    <!-- BucketMoE table - full width -->
-    <div style="margin-top:32px">
-      <h3 style="font-family:'Playfair Display',serif;font-size:1.05rem;color:var(--ink);margin-bottom:8px">BucketMoE Acceleration Strategy</h3>
-      <p style="font-size:.84rem;color:var(--mu);margin-bottom:12px">BucketMoE achieves ∼10.5× and ∼5.9× speedups over the naive baseline with comparable peak GPU memory — applicable via a single function call.</p>
-      <div class="tw2">
+    <!-- BucketMoE full-width -->
+    <div style="margin-top:36px">
+      <p class="ablt">BucketMoE Acceleration Strategy</p>
+      <p class="abld">BucketMoE achieves ∼10.5× and ∼5.9× speedups over the naive baseline with comparable peak GPU memory — applicable via a single function call with no model modification.</p>
+      <div class="tw">
         <table>
           <thead>
             <tr class="thm"><th style="text-align:left">Method</th><th>Seq Len</th><th>New Tokens</th><th>Generation(s)</th><th>Prefill(s)</th><th>Decode(s)</th><th>Decode/Token(ms)</th><th>Peak Mem(GB)</th></tr>
@@ -446,8 +476,11 @@
 </footer>
 
 <script>
-  const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{threshold:.08});
+  const io=new IntersectionObserver(es=>{
+    es.forEach(e=>{if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}});
+  },{threshold:.08});
   document.querySelectorAll('.rv').forEach(el=>io.observe(el));
+
   function copyCite(){
     navigator.clipboard.writeText(document.getElementById('bib').textContent).then(()=>{
       const b=document.querySelector('.cpb');
