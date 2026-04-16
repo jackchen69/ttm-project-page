@@ -1,999 +1,559 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>TTM: An End-to-End human–AI Interaction Model for Real-Time Co-Speech Motion Generation</title>
+  <title>TTM: Real-Time Co-Speech Motion Generation</title>
   <meta name="description" content="TTM: The first end-to-end multimodal language model for joint speech and full-body motion generation from live audio with sub-second latency."/>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0a0f;
-      --surface: #12121a;
-      --surface2: #1a1a26;
-      --border: #2a2a3a;
-      --accent: #6c63ff;
-      --accent2: #ff6b6b;
-      --accent3: #43e0b4;
-      --text: #e8e8f0;
-      --text-muted: #888899;
-      --text-dim: #555566;
-      --glow: rgba(108,99,255,0.15);
+      --bg: #f7f5f0;
+      --bg2: #eeeae2;
+      --surface: #ffffff;
+      --border: #ddd9d0;
+      --accent: #1a1a2e;
+      --red: #c84b31;
+      --green: #2d6a4f;
+      --text: #1a1a1e;
+      --muted: #666660;
+      --dim: #999990;
+      --ink: #2c2c3a;
     }
-
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
     html { scroll-behavior: smooth; }
-
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-weight: 300;
-      line-height: 1.7;
-      overflow-x: hidden;
-    }
-
-    /* ── NOISE OVERLAY ── */
-    body::before {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-      pointer-events: none;
-      z-index: 0;
-      opacity: 0.6;
-    }
-
-    /* ── HERO SECTION ── */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 80px 24px 60px;
-      text-align: center;
-      overflow: hidden;
-    }
-
-    .hero-bg {
-      position: absolute;
-      inset: 0;
-      background:
-        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(108,99,255,0.18) 0%, transparent 70%),
-        radial-gradient(ellipse 40% 40% at 20% 80%, rgba(67,224,180,0.08) 0%, transparent 60%),
-        radial-gradient(ellipse 40% 40% at 80% 70%, rgba(255,107,107,0.06) 0%, transparent 60%);
-      z-index: 0;
-    }
-
-    .hero-grid {
-      position: absolute;
-      inset: 0;
-      background-image:
-        linear-gradient(rgba(108,99,255,0.04) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(108,99,255,0.04) 1px, transparent 1px);
-      background-size: 60px 60px;
-      z-index: 0;
-      mask-image: radial-gradient(ellipse 80% 80% at 50% 50%, black 20%, transparent 80%);
-    }
-
-    .hero > * { position: relative; z-index: 1; }
-
-    .venue-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(108,99,255,0.12);
-      border: 1px solid rgba(108,99,255,0.3);
-      border-radius: 100px;
-      padding: 6px 16px;
-      font-size: 13px;
-      font-weight: 500;
-      color: #a599ff;
-      letter-spacing: 0.05em;
-      margin-bottom: 32px;
-      backdrop-filter: blur(8px);
-    }
-
-    .venue-badge::before {
-      content: '';
-      width: 6px; height: 6px;
-      background: var(--accent3);
-      border-radius: 50%;
-      box-shadow: 0 0 6px var(--accent3);
-      animation: pulse 2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.6; transform: scale(0.8); }
-    }
-
-    h1 {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(2rem, 5vw, 3.6rem);
-      line-height: 1.15;
-      letter-spacing: -0.02em;
-      max-width: 860px;
-      margin-bottom: 12px;
-    }
-
-    h1 .highlight {
-      background: linear-gradient(135deg, #a599ff 0%, #43e0b4 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .subtitle {
-      font-size: 1.1rem;
-      color: var(--text-muted);
-      max-width: 640px;
-      margin: 0 auto 48px;
-    }
-
-    /* ── AUTHORS ── */
-    .authors-block {
-      max-width: 800px;
-      margin-bottom: 48px;
-    }
-
-    .authors-list {
-      font-size: 0.95rem;
-      color: var(--text);
-      line-height: 2;
-    }
-
-    .author { 
-      display: inline;
-      white-space: nowrap;
-    }
-
-    .author a {
-      color: var(--text);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-    .author a:hover { color: #a599ff; }
-
-    sup {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65em;
-      color: var(--accent3);
-    }
-
-    .affiliations {
-      margin-top: 12px;
-      font-size: 0.82rem;
-      color: var(--text-muted);
-      line-height: 1.8;
-    }
-
-    .equal-note {
-      font-size: 0.8rem;
-      color: var(--text-dim);
-      margin-top: 8px;
-      font-style: italic;
-    }
-
-    /* ── BUTTONS ── */
-    .btn-row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 12px;
-      justify-content: center;
-      margin-bottom: 24px;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 22px;
-      border-radius: 8px;
-      font-size: 0.9rem;
-      font-weight: 500;
-      text-decoration: none;
-      transition: all 0.2s;
-      cursor: pointer;
-      border: none;
-      font-family: inherit;
-    }
-
-    .btn-primary {
-      background: var(--accent);
-      color: white;
-      box-shadow: 0 4px 20px rgba(108,99,255,0.35);
-    }
-    .btn-primary:hover {
-      background: #7c74ff;
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(108,99,255,0.5);
-    }
-
-    .btn-secondary {
-      background: var(--surface2);
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-    .btn-secondary:hover {
-      border-color: var(--accent);
-      color: #a599ff;
-      transform: translateY(-2px);
-    }
-
-    /* ── STATS ── */
-    .stats-row {
-      display: flex;
-      gap: 48px;
-      justify-content: center;
-      margin-top: 60px;
-      flex-wrap: wrap;
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-num {
-      font-family: 'DM Serif Display', serif;
-      font-size: 2.4rem;
-      background: linear-gradient(135deg, #a599ff, #43e0b4);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      background-clip: text;
-    }
-
-    .stat-label {
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      margin-top: 2px;
-    }
-
-    /* ── SECTIONS ── */
-    section {
-      position: relative;
-      z-index: 1;
-      padding: 80px 24px;
-      max-width: 1100px;
-      margin: 0 auto;
-    }
-
-    .section-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--accent3);
-      text-transform: uppercase;
-      letter-spacing: 0.15em;
-      margin-bottom: 12px;
-    }
-
-    h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: clamp(1.6rem, 3vw, 2.4rem);
-      letter-spacing: -0.02em;
-      margin-bottom: 24px;
-      line-height: 1.2;
-    }
-
-    .divider {
-      border: none;
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--border), transparent);
-      margin: 0;
-    }
-
-    /* ── ABSTRACT ── */
-    .abstract-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 40px;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .abstract-card::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, var(--accent), var(--accent3));
-    }
-
-    .abstract-card p {
-      font-size: 1.0rem;
-      line-height: 1.85;
-      color: #ccccd8;
-    }
-
-    .abstract-card strong {
-      color: var(--text);
-      font-weight: 500;
-    }
-
-    /* ── HIGHLIGHT BOXES ── */
-    .highlights {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 20px;
-      margin-top: 40px;
-    }
-
-    .highlight-box {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      transition: border-color 0.3s, transform 0.3s;
-      position: relative;
-      overflow: hidden;
-    }
-
-    .highlight-box:hover {
-      border-color: var(--accent);
-      transform: translateY(-4px);
-    }
-
-    .highlight-box::before {
-      content: '';
-      position: absolute;
-      inset: 0;
-      background: radial-gradient(circle at 0% 0%, var(--glow), transparent 60%);
-      opacity: 0;
-      transition: opacity 0.3s;
-    }
-
-    .highlight-box:hover::before { opacity: 1; }
-
-    .highlight-icon {
-      font-size: 1.8rem;
-      margin-bottom: 12px;
-    }
-
-    .highlight-box h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.1rem;
-      margin-bottom: 10px;
-      color: #a599ff;
-    }
-
-    .highlight-box p {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-    }
-
-    /* ── TEASER VIDEO ── */
-    .video-container {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      overflow: hidden;
-      aspect-ratio: 16/9;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-
-    .video-placeholder {
-      text-align: center;
-      color: var(--text-dim);
-    }
-
-    .video-placeholder .play-btn {
-      width: 72px; height: 72px;
-      background: rgba(108,99,255,0.15);
-      border: 2px solid rgba(108,99,255,0.4);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin: 0 auto 16px;
-      font-size: 1.8rem;
-      cursor: pointer;
-      transition: all 0.3s;
-    }
-
-    .video-placeholder .play-btn:hover {
-      background: rgba(108,99,255,0.3);
-      transform: scale(1.1);
-    }
-
-    /* ── ARCHITECTURE ── */
-    .arch-grid {
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: 16px;
-      margin-top: 32px;
-    }
-
-    @media (max-width: 768px) {
-      .arch-grid { grid-template-columns: 1fr; }
-    }
-
-    .arch-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      text-align: center;
-      transition: all 0.3s;
-    }
-
-    .arch-card:hover {
-      border-color: var(--accent);
-      box-shadow: 0 0 30px rgba(108,99,255,0.1);
-    }
-
-    .arch-card .icon {
-      width: 56px; height: 56px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.6rem;
-      margin: 0 auto 14px;
-    }
-
-    .icon-thinker { background: rgba(108,99,255,0.15); }
-    .icon-talker  { background: rgba(255,107,107,0.15); }
-    .icon-mover   { background: rgba(67,224,180,0.15); }
-
-    .arch-card h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.15rem;
-      margin-bottom: 8px;
-    }
-
-    .arch-card p {
-      font-size: 0.84rem;
-      color: var(--text-muted);
-      line-height: 1.6;
-    }
-
-    /* ── RESULTS TABLE ── */
-    .table-wrap {
-      overflow-x: auto;
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      margin-top: 32px;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.85rem;
-    }
-
-    thead {
-      background: var(--surface2);
-    }
-
-    th {
-      padding: 14px 16px;
-      text-align: left;
-      font-weight: 500;
-      color: var(--text-muted);
-      font-size: 0.78rem;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      border-bottom: 1px solid var(--border);
-      white-space: nowrap;
-    }
-
-    td {
-      padding: 12px 16px;
-      border-bottom: 1px solid rgba(42,42,58,0.5);
-      color: var(--text);
-      white-space: nowrap;
-    }
-
-    tr:last-child td { border-bottom: none; }
-
-    .tr-ours { background: rgba(108,99,255,0.06); }
-    .tr-ours td { color: #c8c4ff; }
-
-    .best { color: var(--accent3); font-weight: 600; }
-
-    .method-name { color: #a599ff; font-weight: 500; }
-    .method-gt { color: var(--text-muted); font-style: italic; }
-
-    /* ── CONTRIBUTION PILLS ── */
-    .contrib-list {
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-      margin-top: 32px;
-    }
-
-    .contrib-item {
-      display: flex;
-      gap: 20px;
-      align-items: flex-start;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 24px;
-      transition: border-color 0.3s;
-    }
-
-    .contrib-item:hover { border-color: rgba(108,99,255,0.4); }
-
-    .contrib-num {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.4rem;
-      color: rgba(108,99,255,0.4);
-      min-width: 32px;
-      font-weight: 500;
-    }
-
-    .contrib-item h3 {
-      font-size: 1rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-      color: #c8c4ff;
-    }
-
-    .contrib-item p {
-      font-size: 0.87rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-    }
-
-    /* ── CITATION ── */
-    .citation-block {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 28px;
-      position: relative;
-    }
-
-    .citation-block pre {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      color: #aaa;
-      white-space: pre-wrap;
-      line-height: 1.7;
-    }
-
-    .copy-btn {
-      position: absolute;
-      top: 14px; right: 14px;
-      background: var(--surface2);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      padding: 6px 12px;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      cursor: pointer;
-      transition: all 0.2s;
-      font-family: inherit;
-    }
-
-    .copy-btn:hover {
-      border-color: var(--accent);
-      color: #a599ff;
-    }
-
-    /* ── FOOTER ── */
-    footer {
-      position: relative;
-      z-index: 1;
-      text-align: center;
-      padding: 40px 24px;
-      border-top: 1px solid var(--border);
-      color: var(--text-dim);
-      font-size: 0.83rem;
-    }
-
-    footer a { color: var(--text-muted); text-decoration: none; }
-    footer a:hover { color: #a599ff; }
-
-    /* ── SCROLL REVEAL ── */
-    .reveal {
-      opacity: 0;
-      transform: translateY(24px);
-      transition: opacity 0.6s ease, transform 0.6s ease;
-    }
-    .reveal.visible {
-      opacity: 1;
-      transform: none;
-    }
+    body { background: var(--bg); color: var(--text); font-family: 'Inter', sans-serif; font-weight: 300; line-height: 1.7; overflow-x: hidden; }
 
     /* ── NAV ── */
     nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 100;
-      padding: 0 32px;
-      height: 56px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      background: rgba(10,10,15,0.8);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid rgba(42,42,58,0.4);
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 52px; display: flex; align-items: center; justify-content: space-between;
+      padding: 0 40px; background: rgba(247,245,240,0.93); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
     }
+    .nav-logo { font-family: 'JetBrains Mono', monospace; font-size: 0.82rem; font-weight: 500; color: var(--accent); letter-spacing: 0.1em; }
+    .nav-links { display: flex; gap: 28px; list-style: none; }
+    .nav-links a { font-size: 0.82rem; color: var(--muted); text-decoration: none; transition: color .2s; }
+    .nav-links a:hover { color: var(--accent); }
+    @media (max-width: 640px) { .nav-links { display: none; } }
 
-    .nav-brand {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      font-weight: 500;
-      color: #a599ff;
-      letter-spacing: 0.05em;
+    /* ── HERO ── */
+    .hero {
+      min-height: 100vh; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      padding: 100px 32px 64px; text-align: center; position: relative;
+      background: radial-gradient(ellipse 70% 50% at 50% 0%, rgba(200,75,49,0.06), transparent 70%), var(--bg);
     }
-
-    .nav-links {
-      display: flex;
-      gap: 32px;
-      list-style: none;
+    .hero::before {
+      content: ''; position: absolute; inset: 0; pointer-events: none;
+      background-image: linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 80px 80px; opacity: 0.22;
     }
+    .hero > * { position: relative; z-index: 1; }
 
-    .nav-links a {
-      font-size: 0.83rem;
-      color: var(--text-muted);
-      text-decoration: none;
-      transition: color 0.2s;
+    .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      border: 1px solid var(--border); border-radius: 4px; padding: 5px 16px;
+      font-size: 0.78rem; font-weight: 500; color: var(--muted);
+      letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 28px;
+      background: var(--surface);
     }
-    .nav-links a:hover { color: var(--text); }
+    .badge-dot { width: 6px; height: 6px; background: var(--red); border-radius: 50%; }
 
+    h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(1.9rem, 4.2vw, 3.2rem);
+      line-height: 1.15; letter-spacing: -0.02em;
+      max-width: 860px; color: var(--ink); margin-bottom: 12px;
+    }
+    h1 em { font-style: italic; color: var(--red); }
+    .hero-desc { font-size: 1rem; color: var(--muted); max-width: 580px; margin: 0 auto 44px; line-height: 1.65; }
+
+    /* AUTHORS */
+    .authors { max-width: 840px; margin-bottom: 40px; }
+    .author-list { font-size: 0.9rem; color: var(--ink); line-height: 2.1; }
+    sup { font-family: 'JetBrains Mono', monospace; font-size: 0.6em; color: var(--red); font-weight: 500; }
+    .affils { margin-top: 10px; font-size: 0.79rem; color: var(--muted); line-height: 1.9; }
+    .equal { font-size: 0.77rem; color: var(--dim); margin-top: 8px; font-style: italic; }
+
+    /* BUTTONS */
+    .btns { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 16px; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 7px;
+      padding: 9px 20px; border-radius: 4px; font-size: 0.84rem; font-weight: 500;
+      text-decoration: none; transition: all .18s; cursor: pointer;
+      border: 1px solid transparent; font-family: inherit;
+    }
+    .btn-dark { background: var(--accent); color: #fff; }
+    .btn-dark:hover { background: #2d2d4a; }
+    .btn-ghost { background: var(--surface); color: var(--ink); border-color: var(--border); }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-red { background: var(--red); color: #fff; }
+    .btn-red:hover { background: #b03e28; }
+
+    /* STATS */
+    .stats {
+      display: flex; margin-top: 52px;
+      border: 1px solid var(--border); border-radius: 8px;
+      overflow: hidden; background: var(--surface);
+    }
+    .stat { flex: 1; padding: 18px 24px; text-align: center; border-right: 1px solid var(--border); }
+    .stat:last-child { border-right: none; }
+    .stat-n { font-family: 'Playfair Display', serif; font-size: 1.9rem; color: var(--red); line-height: 1; }
+    .stat-l { font-size: 0.72rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; margin-top: 4px; }
     @media (max-width: 600px) {
-      .nav-links { display: none; }
+      .stats { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
     }
 
-    /* ── IMAGE PLACEHOLDER ── */
-    .img-placeholder {
-      background: var(--surface2);
-      border: 1px dashed var(--border);
-      border-radius: 10px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-dim);
-      font-size: 0.83rem;
-      gap: 8px;
-      padding: 40px;
-      margin-top: 24px;
-    }
+    /* LAYOUT */
+    .wrap { max-width: 1080px; margin: 0 auto; padding: 80px 32px; }
+    .wrap-wide { max-width: 1200px; margin: 0 auto; padding: 80px 32px; }
+    hr.div { border: none; height: 1px; background: var(--border); }
+    .label { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--red); text-transform: uppercase; letter-spacing: 0.14em; margin-bottom: 10px; }
+    h2 { font-family: 'Playfair Display', serif; font-size: clamp(1.5rem, 2.8vw, 2.1rem); letter-spacing: -0.02em; color: var(--ink); margin-bottom: 20px; line-height: 1.2; }
+    .body-text { font-size: 0.96rem; line-height: 1.88; color: #3a3a46; max-width: 780px; }
+    .body-text strong { color: var(--ink); font-weight: 600; }
 
-    .tag {
-      display: inline-block;
-      background: rgba(108,99,255,0.12);
-      border: 1px solid rgba(108,99,255,0.25);
-      border-radius: 4px;
-      padding: 2px 8px;
-      font-size: 0.78rem;
-      color: #a599ff;
-      font-family: 'JetBrains Mono', monospace;
-      margin: 0 2px;
+    /* PROBLEM GRID */
+    .prob-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 1px; background: var(--border); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; margin-top: 36px; }
+    @media (max-width: 768px) { .prob-grid { grid-template-columns: 1fr; } }
+    .prob-card { background: var(--surface); padding: 28px; }
+    .prob-tag { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--red); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 8px; }
+    .prob-card h3 { font-family: 'Playfair Display', serif; font-size: 1rem; color: var(--ink); margin-bottom: 10px; line-height: 1.35; }
+    .prob-card p { font-size: 0.84rem; color: var(--muted); line-height: 1.65; }
+
+    /* PDF EMBED */
+    .fig { margin: 32px 0; }
+    .pdf-frame {
+      width: 100%; border: 1px solid var(--border); border-radius: 8px;
+      display: block; background: var(--surface);
     }
+    .fig-cap { margin-top: 12px; font-size: 0.82rem; color: var(--muted); line-height: 1.6; }
+    .fig-cap strong { color: var(--ink); }
+
+    /* VIDEO */
+    .video-wrap { border-radius: 8px; overflow: hidden; border: 1px solid var(--border); background: #111; margin-top: 0; }
+    .video-wrap video { width: 100%; display: block; }
+
+    /* ARCH CARDS */
+    .arch-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 32px; }
+    @media (max-width: 768px) { .arch-grid { grid-template-columns: 1fr; } }
+    .arch-card { border: 1px solid var(--border); border-radius: 8px; padding: 26px; background: var(--surface); transition: border-color .2s, box-shadow .2s; }
+    .arch-card:hover { border-color: #bbb; box-shadow: 0 4px 20px rgba(0,0,0,.06); }
+    .arch-n { font-family: 'Playfair Display', serif; font-size: 2rem; color: var(--border); line-height: 1; margin-bottom: 10px; }
+    .arch-card h3 { font-family: 'Playfair Display', serif; font-size: 1.05rem; color: var(--ink); margin-bottom: 8px; }
+    .arch-card p { font-size: 0.83rem; color: var(--muted); line-height: 1.65; }
+
+    /* CONTRIB */
+    .contrib-list { display: flex; flex-direction: column; gap: 12px; margin-top: 32px; }
+    .contrib { display: flex; gap: 20px; align-items: flex-start; padding: 22px 24px; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); transition: border-color .2s; }
+    .contrib:hover { border-color: #bbb; }
+    .ctag { font-family: 'JetBrains Mono', monospace; font-size: 0.7rem; background: var(--accent); color: #fff; padding: 3px 8px; border-radius: 3px; white-space: nowrap; margin-top: 2px; }
+    .contrib h3 { font-size: 0.93rem; font-weight: 600; color: var(--ink); margin-bottom: 5px; }
+    .contrib p { font-size: 0.84rem; color: var(--muted); line-height: 1.6; }
+    .mono-tag { display: inline; font-family: 'JetBrains Mono', monospace; font-size: 0.78em; background: var(--bg2); border: 1px solid var(--border); border-radius: 3px; padding: 1px 5px; color: var(--accent); }
+
+    /* TABLE */
+    .tbl-wrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 8px; margin-top: 28px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.84rem; background: var(--surface); }
+    .th-main th { padding: 10px 14px 6px; text-align: center; font-weight: 600; font-size: 0.78rem; letter-spacing: .04em; color: var(--ink); border-bottom: 1px solid var(--border); background: var(--bg2); }
+    .th-main th:first-child { text-align: left; }
+    .th-sub th { padding: 6px 14px 10px; text-align: center; font-size: 0.74rem; color: var(--muted); font-weight: 400; border-bottom: 2px solid var(--border); background: var(--bg2); white-space: nowrap; }
+    .th-sub th:first-child { text-align: left; }
+    td { padding: 10px 14px; text-align: center; border-bottom: 1px solid rgba(0,0,0,.05); white-space: nowrap; }
+    td:first-child { text-align: left; }
+    tr:last-child td { border-bottom: none; }
+    .tr-gt td { color: var(--muted); font-style: italic; }
+    .tr-ours { background: rgba(26,26,46,.03); }
+    .tr-ours td { color: #2d2d4a; }
+    .best { color: var(--green); font-weight: 600; }
+    .best-us { color: var(--accent); font-weight: 700; }
+    .method { color: #444; font-weight: 500; }
+    .dash { color: var(--dim); }
+
+    /* CITATION */
+    .cite-box { position: relative; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 28px 32px; margin-top: 24px; }
+    .cite-box pre { font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #555; line-height: 1.75; white-space: pre-wrap; }
+    .copy-btn { position: absolute; top: 12px; right: 12px; background: var(--bg2); border: 1px solid var(--border); border-radius: 4px; padding: 5px 12px; font-size: 0.74rem; font-family: inherit; color: var(--muted); cursor: pointer; transition: all .18s; }
+    .copy-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* FOOTER */
+    footer { text-align: center; padding: 36px 24px; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--dim); background: var(--bg2); }
+    footer a { color: var(--muted); text-decoration: none; }
+    footer a:hover { color: var(--accent); }
+
+    /* REVEAL */
+    .reveal { opacity: 0; transform: translateY(20px); transition: opacity .55s ease, transform .55s ease; }
+    .reveal.in { opacity: 1; transform: none; }
   </style>
 </head>
 <body>
 
-<!-- ── NAV ── -->
+<!-- NAV -->
 <nav>
-  <span class="nav-brand">TTM</span>
+  <span class="nav-logo">TTM · 2026</span>
   <ul class="nav-links">
     <li><a href="#abstract">Abstract</a></li>
+    <li><a href="#demo">Demo</a></li>
     <li><a href="#method">Method</a></li>
     <li><a href="#results">Results</a></li>
     <li><a href="#citation">Citation</a></li>
   </ul>
 </nav>
 
-<!-- ── HERO ── -->
+<!-- ══════════ HERO ══════════ -->
 <div class="hero">
-  <div class="hero-bg"></div>
-  <div class="hero-grid"></div>
+  <div class="badge"><span class="badge-dot"></span>ACM MM 2026 · Rio de Janeiro, Brazil</div>
 
-  <div class="venue-badge">ACM MM 2026 · Rio de Janeiro, Brazil</div>
-
-  <h1>
-    <span class="highlight">TTM</span>: An End-to-End<br/>
-    human–AI Interaction Model for<br/>
-    Real-Time Co-Speech Motion Generation
+  <h1>TTM: An End-to-End human–AI Interaction Model for<br/>
+    <em>Real-Time Co-Speech Motion Generation</em>
   </h1>
-
-  <p class="subtitle">
-    The first unified streaming model that jointly generates speech and full-body motion from live audio with sub-second latency.
+  <p class="hero-desc">
+    The first unified streaming model that jointly generates speech and full-body motion
+    from live audio with sub-second latency — no cascaded pipelines, no sentence-level buffering.
   </p>
 
-  <!-- AUTHORS -->
-  <div class="authors-block">
-    <div class="authors-list">
-      <span class="author">Dengjie Li<sup>*,1</sup></span>,&nbsp;
-      <span class="author">Jiachen Luo<sup>*,2,3</sup></span>,&nbsp;
-      <span class="author">Wei Tong<sup>*,4</sup></span>,&nbsp;
-      <span class="author">Zhaoyang Liu<sup>1</sup></span>,&nbsp;
-      <span class="author">Yi Zhang<sup>1</sup></span>,&nbsp;
-      <span class="author">Lingfeng Tan<sup>1</sup></span>,&nbsp;
-      <span class="author">Junwei Liao<sup>5</sup></span>,&nbsp;
-      <span class="author">Zenglin Xu<sup>6</sup></span>,&nbsp;
-      <span class="author">Huy Phan<sup>7</sup></span>,&nbsp;
-      <span class="author">Xiangyang Xue<sup>6</sup></span>,&nbsp;
-      <span class="author">Lin Wang<sup>2</sup></span>,&nbsp;
-      <span class="author">Joshua Reiss<sup>2</sup></span>,&nbsp;
-      <span class="author">Xiaozhu Ju<sup>1</sup></span>,&nbsp;
-      <span class="author">Björn Schuller<sup>8,3</sup></span>,&nbsp;
-      <span class="author">Yong Dai<sup>†,1</sup></span>
+  <div class="authors">
+    <div class="author-list">
+      Dengjie Li<sup>*,1</sup>,&ensp;
+      Jiachen Luo<sup>*,2,3</sup>,&ensp;
+      Wei Tong<sup>*,4</sup>,&ensp;
+      Zhaoyang Liu<sup>1</sup>,&ensp;
+      Yi Zhang<sup>1</sup>,&ensp;
+      Lingfeng Tan<sup>1</sup>,&ensp;
+      Junwei Liao<sup>5</sup>,&ensp;
+      Zenglin Xu<sup>6</sup>,&ensp;
+      Huy Phan<sup>7</sup>,&ensp;
+      Xiangyang Xue<sup>6</sup>,&ensp;
+      Lin Wang<sup>2</sup>,&ensp;
+      Joshua Reiss<sup>2</sup>,&ensp;
+      Xiaozhu Ju<sup>1</sup>,&ensp;
+      Björn Schuller<sup>8,3</sup>,&ensp;
+      Yong Dai<sup>†,1</sup>
     </div>
-    <div class="affiliations">
-      <sup>1</sup>Beijing Humanoid Robot Innovation Center&nbsp;&nbsp;
-      <sup>2</sup>Queen Mary University of London&nbsp;&nbsp;
-      <sup>3</sup>TU Munich&nbsp;&nbsp;
-      <sup>4</sup>Tianjin University<br/>
-      <sup>5</sup>Shanghai Innovation Institute&nbsp;&nbsp;
-      <sup>6</sup>Fudan University&nbsp;&nbsp;
-      <sup>7</sup>Meta Reality Lab&nbsp;&nbsp;
-      <sup>8</sup>Imperial College London
+    <div class="affils">
+      <sup>1</sup>&thinsp;Beijing Humanoid Robot Innovation Center &emsp;
+      <sup>2</sup>&thinsp;Queen Mary University of London &emsp;
+      <sup>3</sup>&thinsp;Technical University of Munich &emsp;
+      <sup>4</sup>&thinsp;Tianjin University<br/>
+      <sup>5</sup>&thinsp;Shanghai Innovation Institute &emsp;
+      <sup>6</sup>&thinsp;Fudan University &emsp;
+      <sup>7</sup>&thinsp;Meta Reality Lab &emsp;
+      <sup>8</sup>&thinsp;Imperial College London
     </div>
-    <div class="equal-note">* Equal contribution &nbsp;·&nbsp; † Corresponding author (daiyongya@outlook.com)</div>
+    <div class="equal">* Equal contribution &nbsp;·&nbsp; † Corresponding author: daiyongya@outlook.com</div>
   </div>
 
-  <!-- BUTTONS -->
-  <div class="btn-row">
-    <a href="#" class="btn btn-primary">📄 Paper (PDF)</a>
-    <a href="#" class="btn btn-secondary">💻 Code (GitHub)</a>
-    <a href="#" class="btn btn-secondary">🎬 Video Demo</a>
-    <a href="#" class="btn btn-secondary">🤗 Model Weights</a>
+  <div class="btns">
+    <a href="#" class="btn btn-dark">📄 Paper (PDF)</a>
+    <a href="https://github.com/jackchen69/ttm-project-page" class="btn btn-ghost" target="_blank">💻 GitHub</a>
+    <a href="#demo" class="btn btn-red">🎬 Video Demo</a>
+    <a href="#citation" class="btn btn-ghost">📎 Cite</a>
   </div>
 
-  <!-- STATS -->
-  <div class="stats-row">
-    <div class="stat">
-      <div class="stat-num">450ms</div>
-      <div class="stat-label">End-to-End Latency</div>
+  <div class="stats">
+    <div class="stat"><div class="stat-n">450ms</div><div class="stat-l">End-to-End Latency</div></div>
+    <div class="stat"><div class="stat-n">∼8×</div><div class="stat-l">BucketMoE Speedup</div></div>
+    <div class="stat"><div class="stat-n">∼7%</div><div class="stat-l">TopK Gain</div></div>
+    <div class="stat"><div class="stat-n">4B</div><div class="stat-l">Mover Parameters</div></div>
+  </div>
+</div>
+
+<hr class="div">
+
+<!-- ══════════ ABSTRACT ══════════ -->
+<div class="wrap" id="abstract">
+  <div class="reveal">
+    <div class="label">Abstract</div>
+    <h2>Joint Speech &amp; Full-Body Motion from Live Audio</h2>
+    <p class="body-text">
+      Human communication seamlessly integrates speech with non-verbal cues such as gestures
+      and body posture to convey meaning and intent. Existing voice-motion systems rely on
+      fragmented pipelines that introduce cascaded errors and sentence-level latency.
+      We present <strong>TTM</strong>, <strong>the first end-to-end multimodal language model
+      for joint speech and full-body motion generation</strong> from live audio with sub-second latency.
+      Its <strong>Thinker-Talker-Mover</strong> architecture simultaneously drives speech synthesis
+      and motion generation from a shared audio encoding, eliminating cross-stage errors.
+      We propose <strong>BucketMoE</strong>, achieving ∼8× MoE speedup with zero architectural changes,
+      and <strong>TopK</strong>, a VQ-VAE codebook augmentation method yielding ∼7% performance gain.
+    </p>
+    <div class="prob-grid">
+      <div class="prob-card">
+        <div class="prob-tag">Problem I</div>
+        <h3>No Unified Speech-Motion Model</h3>
+        <p>Cascaded pipelines accumulate errors silently. Without a shared representation, no gradient can jointly optimize audio encoding and motion generation.</p>
+      </div>
+      <div class="prob-card">
+        <div class="prob-tag">Problem II</div>
+        <h3>Sentence-Level Latency</h3>
+        <p>Systems buffer entire utterances before producing any output, incurring 1.5–3 s latency. Natural turn-taking demands sub-second response times.</p>
+      </div>
+      <div class="prob-card">
+        <div class="prob-tag">Problem III</div>
+        <h3>Limited Speech-Motion Data</h3>
+        <p>BEAT (~60h) and HumanML3D (~28h) are small by modern standards. Random temporal cropping produces semantically incomplete training fragments.</p>
+      </div>
     </div>
-    <div class="stat">
-      <div class="stat-num">8×</div>
-      <div class="stat-label">BucketMoE Speedup</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">7%</div>
-      <div class="stat-label">TopK Performance Gain</div>
-    </div>
-    <div class="stat">
-      <div class="stat-num">4B</div>
-      <div class="stat-label">Mover Parameters</div>
+  </div>
+
+  <!-- Figure 1 -->
+  <div class="reveal" style="margin-top:48px;">
+    <div class="fig">
+      <iframe class="pdf-frame" src="figures/figure1.pdf" height="480" style="border:none;"></iframe>
+      <p class="fig-cap">
+        <strong>Figure 1: TTM vs. Cascaded Multi-stage Pipelines.</strong>
+        <em>Left:</em> Conventional pipelines accumulate errors across stages and incur 1.5–3 s latency.
+        <em>Right:</em> TTM unifies everything into a single Thinker-Talker-Mover architecture,
+        streaming synchronized speech and full-body motion at 450 ms latency with no cross-stage errors.
+      </p>
     </div>
   </div>
 </div>
 
-<hr class="divider">
+<hr class="div">
 
-<!-- ── ABSTRACT ── -->
-<section id="abstract">
+<!-- ══════════ DEMO ══════════ -->
+<div class="wrap" id="demo">
   <div class="reveal">
-    <div class="section-label">01 · Abstract</div>
-    <h2>Joint Speech & Motion from Live Audio</h2>
-    <div class="abstract-card">
-      <p>
-        Human communication seamlessly integrates speech with non-verbal cues such as gestures and body posture to convey meaning and intent. Existing voice-motion systems rely on fragmented pipelines that introduce cascaded errors and sentence-level latency. We present <strong>TTM</strong>, <strong>the first end-to-end multimodal language model for joint speech and full-body motion generation</strong> from live audio with sub-second latency. Its <strong>Thinker-Talker-Mover</strong> architecture simultaneously drives speech synthesis and motion generation from a shared audio encoding, eliminating cross-stage errors.
-      </p>
-      <br/>
-      <p>
-        We propose a plug-and-play token-length-aware bucketing strategy for accelerating a Mixture-of-Experts module, named <strong>BucketMoE</strong>, which achieves an ~8× speedup in both training and inference. We further introduce a VQ-VAE codebook-based motion augmentation method named <strong>TopK</strong>, which enhances both audio-motion alignment and the robustness of the autoregressive generation process, leading to ~7% improvement in overall performance. Experiments demonstrate state-of-the-art co-speech motion quality with real-time responsiveness.
-      </p>
-    </div>
-
-    <!-- PROBLEM STATEMENT -->
-    <div class="highlights" style="margin-top:32px;">
-      <div class="highlight-box">
-        <div class="highlight-icon">⛓️</div>
-        <h3>Problem I: No Unified Model</h3>
-        <p>Existing systems chain speech recognition → LLM → TTS → motion generation independently. Errors cascade silently with no joint optimization.</p>
-      </div>
-      <div class="highlight-box">
-        <div class="highlight-icon">⏱️</div>
-        <h3>Problem II: Sentence-Level Latency</h3>
-        <p>Current systems buffer entire utterances before producing output, incurring 1.5–3s latency. Natural turn-taking demands sub-second response times.</p>
-      </div>
-      <div class="highlight-box">
-        <div class="highlight-icon">📊</div>
-        <h3>Problem III: Limited Data</h3>
-        <p>BEAT (~60h) and HumanML3D (~28h) are small by modern standards. Random temporal cropping produces semantically incomplete fragments.</p>
-      </div>
-    </div>
-  </div>
-</section>
-
-<hr class="divider">
-
-<!-- ── TEASER VIDEO ── -->
-<section>
-  <div class="reveal">
-    <div class="section-label">02 · Demo</div>
+    <div class="label">Demo</div>
     <h2>Real-Time Bilingual Co-Speech Motion</h2>
-    <p style="color:var(--text-muted);margin-bottom:24px;">TTM streams synchronized speech and full-body motion from live audio in real time across Mandarin and English.</p>
-    <div class="video-container">
-      <div class="video-placeholder">
-        <div class="play-btn">▶</div>
-        <p>Demo Video</p>
-        <p style="font-size:0.8rem;margin-top:4px;color:var(--text-dim);">Replace with your video embed</p>
-      </div>
+    <p style="color:var(--muted);margin-bottom:24px;font-size:0.92rem;">
+      TTM streams synchronized speech and full-body motion from live audio in real time,
+      supporting Mandarin and English within the MuJoCo simulation environment.
+    </p>
+    <div class="video-wrap">
+      <video controls>
+        <source src="figures/demo.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
     </div>
-    <!-- Uncomment and replace src when you have a video:
-    <div class="video-container">
-      <iframe width="100%" height="100%" src="https://www.youtube.com/embed/YOUR_VIDEO_ID"
-        frameborder="0" allowfullscreen style="border-radius:16px;"></iframe>
-    </div>
-    -->
   </div>
-</section>
 
-<hr class="divider">
+  <!-- Figure 5: three demo scenarios -->
+  <div class="reveal" style="margin-top:40px;">
+    <div class="fig">
+      <iframe class="pdf-frame" src="figures/figure5.pdf" height="420" style="border:none;"></iframe>
+      <p class="fig-cap">
+        <strong>Figure 5: Real-time bilingual interaction and physical motion simulation.</strong>
+        Three interactive scenarios: Mandarin text-driven interaction (left),
+        English speech-driven conversation (middle), and English audio command execution (right).
+        Each panel shows generated speech waveforms, text transcripts, and full-body motion
+        in MuJoCo. The white dot line traces the left wrist's position.
+      </p>
+    </div>
+  </div>
+</div>
 
-<!-- ── METHOD ── -->
-<section id="method">
+<hr class="div">
+
+<!-- ══════════ METHOD ══════════ -->
+<div class="wrap" id="method">
   <div class="reveal">
-    <div class="section-label">03 · Method</div>
+    <div class="label">Method</div>
     <h2>Thinker · Talker · Mover</h2>
-    <p style="color:var(--text-muted);max-width:680px;">
-      TTM extends Qwen3-Omni with a three-component framework that unifies perception, language reasoning, speech synthesis, and motion generation within a single computation graph.
+    <p style="color:var(--muted);font-size:0.92rem;max-width:700px;">
+      TTM extends Qwen3-Omni with a three-component architecture that unifies perception,
+      language reasoning, speech synthesis, and motion generation in a single trainable system.
     </p>
 
+    <!-- Figure 2 -->
+    <div class="fig" style="margin-top:32px;">
+      <iframe class="pdf-frame" src="figures/figure2.pdf" height="500" style="border:none;"></iframe>
+      <p class="fig-cap">
+        <strong>Figure 2: Overview of the TTM architecture.</strong>
+        (a) The Thinker's final-layer representation drives the frozen Talker for streaming speech;
+        an intermediate representation routes to the Mover via trainable Mover Connector,
+        with gradients back-propagating into the Thinker.
+        (b) Top-k codebook augmentation. (c) Three-stage training curriculum.
+      </p>
+    </div>
+  </div>
+
+  <!-- Three components -->
+  <div class="reveal" style="margin-top:48px;">
     <div class="arch-grid">
       <div class="arch-card">
-        <div class="icon icon-thinker">🧠</div>
+        <div class="arch-n">01</div>
         <h3>Thinker</h3>
-        <p>Encodes live audio into a hierarchy of hidden representations at multiple layer depths. Its final hidden state conditions the Talker; an intermediate state at layer 24 routes to the Mover — enabling motion gradients to back-propagate into audio encoding.</p>
+        <p>Encodes live audio into a hierarchy of hidden representations. Its <em>final</em> state conditions the Talker; an <em>intermediate</em> state (layer 24) routes to the Mover — enabling motion gradients to shape audio encoding during training.</p>
       </div>
       <div class="arch-card">
-        <div class="icon icon-talker">🗣️</div>
-        <h3>Talker</h3>
-        <p>A frozen speech synthesis module driven by the Thinker's final-layer representation. Outputs are encoded via RVQ with 8 codebooks and decoded by Code2Wav. Its intermediate representations actively condition the Mover via <em>cross-modal distillation</em>.</p>
+        <div class="arch-n">02</div>
+        <h3>Talker (frozen)</h3>
+        <p>Drives streaming speech synthesis via RVQ with 8 codebooks, decoded by Code2Wav. Remains frozen to preserve pretrained quality. Its intermediate representations provide <em>cross-modal distillation</em> to the Mover at training time.</p>
       </div>
       <div class="arch-card">
-        <div class="icon icon-mover">🏃</div>
+        <div class="arch-n">03</div>
         <h3>Mover</h3>
-        <p>Generates full-body motion tokens autoregressively by conditioning on both Thinker and Talker hidden states via a trainable Mover Connector. Motion is represented in HumanML3D format with corrected SMPL rotation parameters for direct robot retargeting.</p>
+        <p>Generates full-body motion tokens autoregressively, conditioning on both Thinker and Talker states via a lightweight Mover Connector. Uses corrected HumanML3D SMPL parameters for direct robot retargeting — no post-hoc fitting required.</p>
       </div>
-    </div>
-
-    <!-- Architecture figure placeholder -->
-    <div class="img-placeholder" style="min-height:240px;">
-      <span style="font-size:2rem;">🖼️</span>
-      <span>Architecture Figure (figure2.pdf)</span>
-      <span style="color:var(--text-dim);font-size:0.75rem;">Replace with: &lt;img src="figures/figure2.png" style="width:100%;border-radius:10px;"&gt;</span>
     </div>
   </div>
 
-  <!-- THREE INNOVATIONS -->
-  <div class="reveal" style="margin-top:64px;">
-    <div class="section-label">Key Innovations</div>
+  <!-- Key innovations -->
+  <div class="reveal" style="margin-top:48px;">
+    <div class="label">Key Innovations</div>
     <div class="contrib-list">
-      <div class="contrib-item">
-        <span class="contrib-num">01</span>
+      <div class="contrib">
+        <span class="ctag">TTM</span>
         <div>
           <h3>Cross-Modal Intermediate Coupling</h3>
-          <p>Rather than conditioning downstream modules only on the Thinker's final output, TTM routes an intermediate-layer representation simultaneously to both the Talker and Mover. During training, motion gradients back-propagate through this representation into the Thinker — a feedback loop structurally impossible in any cascaded pipeline.</p>
+          <p>An intermediate Thinker representation is routed simultaneously to both Talker and Mover. During training, motion gradients back-propagate through this shared representation into the audio encoder — a joint optimization signal structurally impossible in any cascaded pipeline.</p>
         </div>
       </div>
-      <div class="contrib-item">
-        <span class="contrib-num">02</span>
+      <div class="contrib">
+        <span class="ctag">BucketMoE</span>
         <div>
-          <h3>BucketMoE: ~8× MoE Acceleration</h3>
-          <p>After standard expert dispatch, tokens are grouped into <span class="tag">K</span> length-aware buckets and processed as a single batched matrix operation. Reduces sequential iterations from N=128 to K=8 (training) or K=1 (decode). Achieves <strong>~8× wall-clock speedup</strong> with no architectural changes, no extra memory, and no code modifications — a pure runtime patch.</p>
+          <h3>∼8× MoE Acceleration — Pure Runtime Patch</h3>
+          <p>After standard expert dispatch, tokens are grouped into <span class="mono-tag">K</span> length-aware buckets and processed as a single batched matrix operation. Reduces sequential iterations from N=128 to K=8 (training) or K=1 (decode). Zero architectural changes, zero extra memory.</p>
         </div>
       </div>
-      <div class="contrib-item">
-        <span class="contrib-num">03</span>
+      <div class="contrib">
+        <span class="ctag">TopK</span>
         <div>
-          <h3>TopK Motion Augmentation</h3>
-          <p>Rather than committing to the single nearest VQ-VAE codebook entry, TTM samples uniformly from the <span class="tag">k=5</span> nearest entries. These <em>motion synonyms</em> expose the Mover to a richer training distribution while preserving audio-motion temporal alignment by construction, yielding an average <strong>~7% performance gain</strong>.</p>
+          <h3>VQ-VAE Codebook Motion Augmentation</h3>
+          <p>Rather than always selecting the nearest codebook entry, TTM samples uniformly from the <span class="mono-tag">k=5</span> nearest neighbours. These <em>motion synonyms</em> preserve audio-motion temporal alignment by construction, yielding ∼7% average performance gain.</p>
         </div>
       </div>
     </div>
   </div>
-</section>
 
-<hr class="divider">
+  <!-- Figure 3: TopK -->
+  <div class="reveal" style="margin-top:48px;">
+    <div class="fig">
+      <iframe class="pdf-frame" src="figures/figure3.pdf" height="400" style="border:none;"></iframe>
+      <p class="fig-cap">
+        <strong>Figure 3: TopK Motion Augmentation.</strong>
+        For each motion frame, the VQ-VAE encoder retrieves the k=5 nearest codebook entries
+        by Euclidean distance. One is sampled uniformly at random, introducing a
+        <em>motion synonym</em> (purple) into the token sequence. Temporal alignment is
+        preserved by construction since only the codebook index is substituted.
+      </p>
+    </div>
+  </div>
+</div>
 
-<!-- ── RESULTS ── -->
-<section id="results">
+<hr class="div">
+
+<!-- ══════════ RESULTS ══════════ -->
+<div class="wrap-wide" id="results">
   <div class="reveal">
-    <div class="section-label">04 · Results</div>
-    <h2>State-of-the-Art Performance</h2>
-    <p style="color:var(--text-muted);margin-bottom:8px;">
-      Comparison on text-to-motion and speech-to-motion benchmarks. TTM<sub>Mover4B_text</sub> achieves best Diversity, R-Precision, and Matching Score while approaching ground-truth quality.
+    <div class="label">Results</div>
+    <h2>State-of-the-Art on Text-to-Motion &amp; Speech-to-Motion</h2>
+    <p style="color:var(--muted);font-size:0.9rem;max-width:700px;margin-bottom:8px;">
+      TTM<sub>Mover4B_text</sub> achieves the best Diversity, R-Precision Top-1/2/3,
+      Matching Score and BC, approaching ground-truth level on multiple metrics.
+      Metrics averaged over 60 runs with 95% confidence intervals.
     </p>
-
-    <div class="table-wrap">
+    <div class="tbl-wrap">
       <table>
         <thead>
-          <tr>
-            <th>Method</th>
-            <th>FID ↓</th>
-            <th>Diversity ↑</th>
-            <th>Top-1 ↑</th>
-            <th>Top-3 ↑</th>
-            <th>Match ↓</th>
-            <th>FGD ↓</th>
-            <th>BC ↑</th>
-            <th>DIV ↑</th>
+          <tr class="th-main">
+            <th rowspan="2" style="text-align:left;padding:12px 14px;">Method</th>
+            <th colspan="6">Text-to-Motion</th>
+            <th colspan="3">Speech-to-Motion</th>
+          </tr>
+          <tr class="th-sub">
+            <th>FID ↓</th><th>Diversity ↑</th><th>Top-1(%)↑</th>
+            <th>Top-2(%)↑</th><th>Top-3(%)↑</th><th>Match↓</th>
+            <th>FGD ↓</th><th>BC ↑</th><th>DIV ↑</th>
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td class="method-gt">Ground Truth</td>
-            <td>0.117</td><td>9.945</td><td>51.87</td><td>78.04</td><td>3.102</td><td>1.423</td><td>0.740</td><td>12.066</td>
+          <tr class="tr-gt">
+            <td>Ground Truth</td>
+            <td>0.117</td><td>9.945</td><td>51.87</td><td>68.98</td><td>78.04</td><td>3.102</td>
+            <td>1.423</td><td>0.740</td><td>12.066</td>
           </tr>
           <tr>
-            <td class="method-name">EMAGE</td>
-            <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td><strong class="best">0.615</strong></td><td>0.592</td><td>11.427</td>
+            <td class="method">EMAGE</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td>
+            <td><span class="best">0.615</span></td><td>0.592</td><td>11.427</td>
           </tr>
           <tr>
-            <td class="method-name">SemTalk</td>
-            <td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>5.269</td><td>0.689</td><td><strong class="best">13.033</strong></td>
+            <td class="method">SemTalk</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td><td class="dash">—</td>
+            <td>5.269</td><td>0.689</td><td><span class="best">13.033</span></td>
           </tr>
           <tr>
-            <td class="method-name">Language of Motion</td>
-            <td>11.144</td><td>6.292</td><td>20.16</td><td>39.45</td><td>5.940</td><td>47.951</td><td>0.672</td><td>9.933</td>
+            <td class="method">Language of Motion</td>
+            <td>11.144</td><td>6.292</td><td>20.16</td><td>31.80</td><td>39.45</td><td>5.940</td>
+            <td>47.951</td><td>0.672</td><td>9.933</td>
           </tr>
           <tr>
-            <td class="method-name">T2M-GPT</td>
-            <td><strong class="best">0.133</strong></td><td>9.577</td><td>47.21</td><td>75.53</td><td>3.182</td><td>—</td><td>—</td><td>—</td>
+            <td class="method">T2M-GPT</td>
+            <td><span class="best">0.133</span></td><td>9.577</td><td>47.21</td><td>66.29</td><td>75.53</td><td>3.182</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td>
           </tr>
           <tr>
-            <td class="method-name">HunYuan-Motion1.0</td>
-            <td>1.094</td><td>9.668</td><td>46.95</td><td>75.07</td><td>3.477</td><td>—</td><td>—</td><td>—</td>
+            <td class="method">HunYuan-Motion1.0</td>
+            <td>1.094</td><td>9.668</td><td>46.95</td><td>64.84</td><td>75.07</td><td>3.477</td>
+            <td class="dash">—</td><td class="dash">—</td><td class="dash">—</td>
           </tr>
           <tr class="tr-ours">
             <td><strong>TTM Mover0.6B (text)</strong></td>
-            <td>0.567</td><td>10.303</td><td>50.23</td><td>77.73</td><td>3.181</td><td>1.781</td><td>0.704</td><td>11.077</td>
+            <td>0.567</td><td>10.303</td><td>50.23</td><td>68.41</td><td>77.73</td><td>3.181</td>
+            <td>1.781</td><td>0.704</td><td>11.077</td>
           </tr>
           <tr class="tr-ours">
             <td><strong>TTM Mover0.6B (audio)</strong></td>
-            <td>0.851</td><td>10.275</td><td>43.86</td><td>68.79</td><td>3.990</td><td>1.814</td><td>0.698</td><td>11.495</td>
+            <td>0.851</td><td>10.275</td><td>43.86</td><td>60.11</td><td>68.79</td><td>3.990</td>
+            <td>1.814</td><td>0.698</td><td>11.495</td>
           </tr>
           <tr class="tr-ours">
-            <td><strong>TTM Mover4B (text)</strong></td>
-            <td><strong class="best" style="color:#a599ff">0.421</strong></td>
-            <td><strong class="best" style="color:#a599ff">10.376</strong></td>
-            <td><strong class="best" style="color:#a599ff">51.02</strong></td>
-            <td><strong class="best" style="color:#a599ff">79.22</strong></td>
-            <td><strong class="best" style="color:#a599ff">3.094</strong></td>
+            <td><strong>TTM Mover4B (text) ★</strong></td>
+            <td><span class="best-us">0.421</span></td>
+            <td><span class="best-us">10.376</span></td>
+            <td><span class="best-us">51.02</span></td>
+            <td><span class="best-us">69.67</span></td>
+            <td><span class="best-us">79.22</span></td>
+            <td><span class="best-us">3.094</span></td>
             <td>1.801</td>
-            <td><strong class="best" style="color:#a599ff">0.718</strong></td>
+            <td><span class="best-us">0.718</span></td>
             <td>11.287</td>
           </tr>
           <tr class="tr-ours">
             <td><strong>TTM Mover4B (audio)</strong></td>
-            <td>0.745</td><td>10.356</td><td>46.62</td><td>71.22</td><td>3.887</td><td>1.794</td><td>0.711</td><td>11.113</td>
+            <td>0.745</td><td>10.356</td><td>46.62</td><td>62.84</td><td>71.22</td><td>3.887</td>
+            <td>1.794</td><td>0.711</td><td>11.113</td>
           </tr>
         </tbody>
       </table>
     </div>
+  </div>
 
-    <!-- Qualitative figure placeholder -->
-    <div class="img-placeholder" style="min-height:200px;margin-top:32px;">
-      <span style="font-size:2rem;">🖼️</span>
-      <span>Qualitative Comparison Figure (figure4.pdf)</span>
+  <!-- Figure 4: Qualitative -->
+  <div class="reveal" style="margin-top:56px;">
+    <div class="label">Qualitative Comparison</div>
+    <h2>Co-Speech Motion Quality</h2>
+    <div class="fig">
+      <iframe class="pdf-frame" src="figures/figure4.pdf" height="520" style="border:none;"></iframe>
+      <p class="fig-cap">
+        <strong>Figure 4: Qualitative comparison of co-speech full-body motion generation.</strong>
+        Given the same speech input, TTM aligns most closely with the ground truth in both timing
+        and amplitude. EMAGE and SemTalk overlook large-scale movements (orange boxes) and
+        introduce extraneous motions (red boxes). Forest green line = audio onset strength;
+        purple curve = left wrist position.
+      </p>
     </div>
   </div>
-</section>
+</div>
 
-<hr class="divider">
+<hr class="div">
 
-<!-- ── CITATION ── -->
-<section id="citation">
+<!-- ══════════ CITATION ══════════ -->
+<div class="wrap" id="citation">
   <div class="reveal">
-    <div class="section-label">05 · Citation</div>
+    <div class="label">Citation</div>
     <h2>Cite This Work</h2>
-    <div class="citation-block">
-      <button class="copy-btn" onclick="copyCitation()">Copy</button>
-      <pre id="citation-text">@inproceedings{li2026ttm,
+    <div class="cite-box">
+      <button class="copy-btn" onclick="copyCite()">Copy BibTeX</button>
+      <pre id="bib">@inproceedings{li2026ttm,
   title     = {TTM: An End-to-End human--AI Interaction Model for
                Real-Time Co-Speech Motion Generation},
   author    = {Li, Dengjie and Luo, Jiachen and Tong, Wei and
@@ -1007,41 +567,27 @@
 }</pre>
     </div>
   </div>
-</section>
+</div>
 
-<!-- ── FOOTER ── -->
 <footer>
-  <p>
-    © 2026 TTM Authors · Beijing Humanoid Robot Innovation Center &amp; collaborators ·
+  <p>© 2026 TTM Authors · Beijing Humanoid Robot Innovation Center &amp; collaborators</p>
+  <p style="margin-top:6px;">
     Contact: <a href="mailto:daiyongya@outlook.com">daiyongya@outlook.com</a>
-  </p>
-  <p style="margin-top:8px;">
-    Website template inspired by <a href="https://nerfies.github.io" target="_blank">Nerfies</a> and
-    <a href="https://eliahuhorwitz.github.io/Academic-project-page-template/" target="_blank">Academic Project Page Template</a>
+    &nbsp;·&nbsp; Page inspired by <a href="https://nerfies.github.io" target="_blank">Nerfies</a>
   </p>
 </footer>
 
 <script>
-  // Scroll reveal
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(e => {
-      if (e.isIntersecting) {
-        e.target.classList.add('visible');
-        observer.unobserve(e.target);
-      }
-    });
-  }, { threshold: 0.1 });
+  const io = new IntersectionObserver(es => {
+    es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } });
+  }, { threshold: 0.08 });
+  document.querySelectorAll('.reveal').forEach(el => io.observe(el));
 
-  document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
-
-  // Copy citation
-  function copyCitation() {
-    const text = document.getElementById('citation-text').textContent;
-    navigator.clipboard.writeText(text).then(() => {
-      const btn = document.querySelector('.copy-btn');
-      btn.textContent = 'Copied!';
-      btn.style.color = '#43e0b4';
-      setTimeout(() => { btn.textContent = 'Copy'; btn.style.color = ''; }, 2000);
+  function copyCite() {
+    navigator.clipboard.writeText(document.getElementById('bib').textContent).then(() => {
+      const b = document.querySelector('.copy-btn');
+      b.textContent = '✓ Copied!'; b.style.color = 'var(--green)';
+      setTimeout(() => { b.textContent = 'Copy BibTeX'; b.style.color = ''; }, 2200);
     });
   }
 </script>
